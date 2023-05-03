@@ -6,7 +6,6 @@
 #include <thread>
 #include <sstream>
 #include <vector>
-
 #include "mysql.h"
 
 
@@ -19,6 +18,7 @@ using std::endl;
 using std::string;
 
 bool is_duplicate;
+bool is_login;
 
 
 struct SOCKET_INFO {
@@ -29,6 +29,7 @@ struct SOCKET_INFO {
 std::vector<SOCKET_INFO> sck_list; // 서버에 연결된 client 저장할 변수
 SOCKET_INFO server_sock; // 서버 소켓의 정보를 저장할 변수
 int client_count = 0;  //현재 접속하고 있는 클라이언트의 수 카운트.
+string nickname;
 
 void server_init(); // 서버용 소켓을 만드는 함수. ~ listen()
 void add_client(); // accept 함수 실행되고 있을 예정
@@ -40,7 +41,7 @@ void sql_is_id_duplicate(string new_id);
 void check_id_duplicate(string new_id);
 void sql_connect();
 void sql_disconnect();
-
+void sql_login(string id, string pw);
 
 // MySQL Connector/C++ 초기화
 sql::mysql::MySQL_Driver* driver; // 추후 해제하지 않아도 Connector/C++가 자동으로 해제해 줌
@@ -69,6 +70,7 @@ int main() {
             // 클라이언트 받을 수 있는 상태를 만들어 줌, accept
             // 클라이언트 별로 각자 다른 일을 할 수 있게끔 다중스레드를 만들어 줌
         }
+
 
         while (1) {
             string text, msg = "";
@@ -132,38 +134,73 @@ void add_client() {
     // connect()
     recv(new_client.sck, buf, MAX_SIZE, 0); // 클라이언트 connect(), send()
     // 클라이언트 측에서 바로 user 이름을 담아서 send를 함. recv()로 받기 위해
-
+    cout << "buf" << buf << endl;
     std::stringstream userinfo(buf);
     string id, pw;
     userinfo >> new_client.user >> id >> pw;
+
+    cout << "user" << new_client.user << endl;
+
+    if (new_client.user == "*login*") {
+        cout << "로그인으로 들어옴!" << endl;
+        sql_login(id, pw);
+        if (is_login) {
+            cout << "is_login if문 분기 통과 완료" << endl;
+            new_client.user = nickname;
+            string msg = "[공지] " + new_client.user + " 님이 입장했습니다.";
+            cout << msg << endl; // 서버 콘솔에 공지 찍음.
+
+
+            sck_list.push_back(new_client); // sck list 에 추가함.
+            // [ {12345,"jonghoon"}, {43210,"yijonghoon"},{32134,"hoon"} ]
+
+            std::thread th(recv_msg, client_count); //client_count = 현재 클라이언트의 수(입장 전 0)
+            // 방금 생성된 client가 앞으로도 계속 메시지를 받을 수 있도록 recv
+
+
+            client_count++; // 클라이언트 수 늘려줌.
+            cout << "[공지] 현재 접속자 수 : " << client_count << "명" << endl;
+            send_msg(msg.c_str());
+            th.join(); // 얘를 만날때까지 main함수의 종료가 보류됨.
+        }
+        /*else {
+            send(new_client.sck, "아이디 혹은 패스워드가 다릅니다.", MAX_SIZE, 0);
+        }*/
+
+    }
     // new_client.user = string(buf); // buf를 string형으로 변환해서 user에 저장
-
-    is_duplicate = false;
-    sql_is_id_duplicate(id);
-
-
-
-        
-        sql_signup(id, new_client.user, pw);
-        string msg = "[공지] " + new_client.user + " 님이 입장했습니다.";
-        cout << msg << endl; // 서버 콘솔에 공지 찍음.
+    else {
+        is_duplicate = false;
+        sql_is_id_duplicate(id);
 
 
-        sck_list.push_back(new_client); // sck list 에 추가함.
-        // [ {12345,"jonghoon"}, {43210,"yijonghoon"},{32134,"hoon"} ]
 
-        std::thread th(recv_msg, client_count); //client_count = 현재 클라이언트의 수(입장 전 0)
-        // 방금 생성된 client가 앞으로도 계속 메시지를 받을 수 있도록 recv
+        if (!is_duplicate) {
+            sql_signup(id, new_client.user, pw);
+            string msg = "[공지] " + new_client.user + " 님이 입장했습니다.";
+            cout << msg << endl; // 서버 콘솔에 공지 찍음.
 
 
-        client_count++; // 클라이언트 수 늘려줌.
-        cout << "[공지] 현재 접속자 수 : " << client_count << "명" << endl;
-        send_msg(msg.c_str());
-        th.join(); // 얘를 만날때까지 main함수의 종료가 보류됨.
+            sck_list.push_back(new_client); // sck list 에 추가함.
+            // [ {12345,"jonghoon"}, {43210,"yijonghoon"},{32134,"hoon"} ]
+
+            std::thread th(recv_msg, client_count); //client_count = 현재 클라이언트의 수(입장 전 0)
+            // 방금 생성된 client가 앞으로도 계속 메시지를 받을 수 있도록 recv
+
+
+            client_count++; // 클라이언트 수 늘려줌.
+            cout << "[공지] 현재 접속자 수 : " << client_count << "명" << endl;
+            send_msg(msg.c_str());
+            th.join(); // 얘를 만날때까지 main함수의 종료가 보류됨.
+
+        }
+        else {
+            send(new_client.sck, "로그인에 실패하셨습니다.", MAX_SIZE, 0);
+        }
+
+
+    }
     
-
-    
-
    
 }
 
@@ -173,7 +210,7 @@ void send_msg(const char* msg) {
     }
     
 }
-void send_msg(SOCKET sck) {
+void send_msg(SOCKET sck,string msg) {
    // send(sck_list[i].sck, msg, MAX_SIZE, 0);
 }
 
@@ -218,7 +255,7 @@ void sql_signup(string id, string nickname, string password) {
     stmt->execute("set names euckr");
     if (stmt) { delete stmt; stmt = nullptr; }
 
-    // pstmt를 이용하면 입력 값을 나중에 지정할 수 있다.
+
     pstmt = con->prepareStatement("INSERT INTO user(id, nickname, password) VALUES(?,?,?)"); // INSERT
 
     pstmt->setString(1, id);
@@ -233,14 +270,16 @@ void sql_signup(string id, string nickname, string password) {
 
 void sql_is_id_duplicate(string new_id) {
     sql_connect();
-    // select (stmt, pstmt 둘다 사용 가능)
+
     stmt = con->createStatement();
+
     result = stmt->executeQuery("SELECT * FROM user WHERE id = '"+new_id +"'");
     delete stmt;
 
-    while (result->next())
+    while (result->next()) {
         cout << "중복검사에 걸림" << endl;
         is_duplicate = true;
+    }
 
     sql_disconnect();
 }
@@ -273,10 +312,34 @@ void sql_disconnect() {
 
 }
 
-void check_id_duplicate(string new_id) {
+void sql_login(string id, string pw) {
+    sql_connect();
+    is_login = false;
+    pstmt = con->prepareStatement("SELECT * FROM user WHERE id = ? AND password = ?");
+    pstmt->setString(1, id);
+    pstmt->setString(2, pw);
+    result = pstmt->executeQuery();
+
+    while (result->next()) {
+        cout << "로그인 성공!" << endl;
+        pstmt = con->prepareStatement("SELECT nickname FROM user WHERE id = ? AND password = ?");
+        pstmt->setString(1, id);
+        pstmt->setString(2, pw);
+        result = pstmt->executeQuery();
+        while (result->next()) {
+            nickname = result->getString(1);
+            cout << nickname << endl;
+            is_login = true;
+        }
 
 
+
+    }
+
+    sql_disconnect();
 }
+
+
 
 
 

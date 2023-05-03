@@ -2,7 +2,7 @@
 C:\Users\UserK\Desktop\chat\chat\Chatting\ChattingServer\mysql.h(1,1): warning C4828: 파일에 0x14b 오프셋에서 시작하는 문자가 포함되어 있습니다. 이 문자는 현재 원본 문자 집합에서 잘못된 문자입니다(코드 페이지 949).
      C:\Users\UserK\Desktop\chat\chat\Chatting\x64\Release\ChattingServer.lib 라이브러리 및 C:\Users\UserK\Desktop\chat\chat\Chatting\x64\Release\ChattingServer.exp 개체를 생성하고 있습니다.
   코드를 생성하고 있습니다.
-  2 of 347 functions ( 0.6%) were compiled, the rest were copied from previous compilation.
+  2 of 358 functions ( 0.6%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
     4 functions had inline decision re-evaluated but remain unchanged
   코드를 생성했습니다.

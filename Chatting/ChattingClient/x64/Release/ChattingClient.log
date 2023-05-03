@@ -1,7 +1,6 @@
 ﻿  client.cpp
-C:\Users\UserK\Desktop\chat\chat\Chatting\ChattingClient\client.cpp(78,135): warning C4267: '인수': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\UserK\Desktop\chat\chat\Chatting\ChattingClient\client.cpp(111,135): warning C4267: '인수': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
-C:\Users\UserK\Desktop\chat\chat\Chatting\ChattingClient\client.cpp(131,56): warning C4267: '인수': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\UserK\Desktop\chat\chat\Chatting\ChattingClient\client.cpp(76,131): warning C4267: '인수': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\UserK\Desktop\chat\chat\Chatting\ChattingClient\client.cpp(89,56): warning C4267: '인수': 'size_t'에서 'int'(으)로 변환하면서 데이터가 손실될 수 있습니다.
   코드를 생성하고 있습니다.
   1 of 211 functions ( 0.5%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation

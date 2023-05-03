@@ -1,140 +1,97 @@
 #pragma comment(lib, "ws2_32.lib")
-
-#include <WinSock2.h> //Winsock Çì´õÆÄÀÏ include. WSADATA µé¾îÀÖÀ½.¤¤
+#include <WinSock2.h> //Winsock ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ include. WSADATA ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½.ï¿½ï¿½
 #include <WS2tcpip.h>
 #include <string>
 #include <sstream>
 #include <iostream>
 #include <thread>
-
 #define MAX_SIZE 1024
-
 using std::cout;
 using std::cin;
 using std::endl;
 using std::string;
-
 SOCKET client_sock;
 string my_nick;
 string id, password;
-
+bool isServerConnected = false;
 int chat_recv() {
-    char buf[MAX_SIZE] = { };
+    char buf[MAX_SIZE] = {};
     string msg;
-
-    while (1) {
+    while (isServerConnected) {
         ZeroMemory(&buf, MAX_SIZE);
-
         if (recv(client_sock, buf, MAX_SIZE, 0) > 0) {
             msg = buf;
-            // ´Ð³×ÀÓ : ¸Þ½ÃÁö
-            std::stringstream ss(msg);  // ¹®ÀÚ¿­À» ½ºÆ®¸²È­ÇÏ°í ss¶ó´Â º¯¼ö¿¡ ´ã´Â´Ù.
+            std::stringstream ss(msg);
             string user;
-            ss >> user; // ss¿¡ ´ã°í ½ºÆ®¸²À» ÅëÇØ, ¹®ÀÚ¿­À» °ø¹é ºÐ¸®ÇØ º¯¼ö¿¡ ÇÒ´ç
-            if (user != my_nick) cout << buf << endl; // ³»°¡ º¸³½ °Ô ¾Æ´Ò °æ¿ì¿¡¸¸ Ãâ·ÂÇÏµµ·Ï.
-            // ´Ð³×ÀÓ : ¸Þ½ÃÁö¿¡¼­ Ã³À½ '´Ð³×ÀÓ' ¸¸ ¹Þ¾Æ¼­ my_nick°ú ºñ±³ÇÑ´Ù. Åë°úÇÏÁö ¸øÇÑ´Ù¸é
+            ss >> user;
+            if (user != my_nick)
+                cout << buf << endl;
         }
         else {
-            cout << "Server Off" << endl;
-            return -1;
+            cout << "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½." << endl;
+            break;
         }
     }
+    return 0;
 }
-
 int main() {
     WSADATA wsa;
-
-    // Winsock¸¦ ÃÊ±âÈ­ÇÏ´Â ÇÔ¼ö. MAKEWORD(2, 2)´Â WinsockÀÇ 2.2 ¹öÀüÀ» »ç¿ëÇÏ°Ú´Ù´Â ÀÇ¹Ì.
-    // ½ÇÇà¿¡ ¼º°øÇÏ¸é 0À», ½ÇÆÐÇÏ¸é ±× ÀÌ¿ÜÀÇ °ªÀ» ¹ÝÈ¯.
-    // 0À» ¹ÝÈ¯Çß´Ù´Â °ÍÀº WinsockÀ» »ç¿ëÇÒ ÁØºñ°¡ µÇ¾ú´Ù´Â ÀÇ¹Ì.
+    // Winsockï¿½ï¿½ ï¿½Ê±ï¿½È­ï¿½Ï´ï¿½ ï¿½Ô¼ï¿½. MAKEWORD(2, 2)ï¿½ï¿½ Winsockï¿½ï¿½ 2.2 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ï°Ú´Ù´ï¿½ ï¿½Ç¹ï¿½.
+    // ï¿½ï¿½ï¿½à¿¡ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¸ï¿½ 0ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½Ï¸ï¿½ ï¿½ï¿½ ï¿½Ì¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯.
+    // 0ï¿½ï¿½ ï¿½ï¿½È¯ï¿½ß´Ù´ï¿½ ï¿½ï¿½ï¿½ï¿½ Winsockï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Øºï¿½ ï¿½Ç¾ï¿½ï¿½Ù´ï¿½ ï¿½Ç¹ï¿½.
     int code = WSAStartup(MAKEWORD(2, 2), &wsa);
-
     if (!code) {
-        
-        cout << "ÀÌ¹Ì ¾ÆÀÌµð°¡ ÀÖÀ¸½Ã¸é 1, È¸¿ø°¡ÀÔÀ» ¿øÇÏ½Ã¸é 2¹øÀ» ´­·¯ÁÖ¼¼¿ä.";
+        cout << "ï¿½Ì¹ï¿½ ï¿½ï¿½ï¿½Ìµï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ã¸ï¿½ 1, È¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ï½Ã¸ï¿½ 2ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ö¼ï¿½ï¿½ï¿½.";
         int sign;
         cin >> sign;
         if (sign == 1) {
-            cout << "·Î±×ÀÎÀ» ÇØÁÖ¼¼¿ä";
-
-            cout << "¾ÆÀÌµð¸¦ ÀÔ·ÂÇØÁÖ¼¼¿ä :";
+            my_nick = "*login*";
+            cout << "ï¿½Î±ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ö¼ï¿½ï¿½ï¿½" << endl;;
+            cout << "ï¿½ï¿½ï¿½Ìµï¿½ ï¿½Ô·ï¿½ï¿½ï¿½ï¿½Ö¼ï¿½ï¿½ï¿½ : ";
             cin >> id;
-
-
-            cout << "ºñ¹Ð¹øÈ£¸¦ ÀÔ·ÂÇØÁÖ¼¼¿ä :";
+            cout << "ï¿½ï¿½Ð¹ï¿½È£ï¿½ï¿½ ï¿½Ô·ï¿½ï¿½ï¿½ï¿½Ö¼ï¿½ï¿½ï¿½ : ";
             cin >> password;
-
-            client_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP); // 
-            my_nick = "*·Î±×ÀÎ*";
-
-            SOCKADDR_IN client_addr = {};
-            client_addr.sin_family = AF_INET;
-            client_addr.sin_port = htons(2304);
-            InetPton(AF_INET, TEXT("127.0.0.1"), &client_addr.sin_addr);
-
-            while (1) {
-                if (!connect(client_sock, (SOCKADDR*)&client_addr, sizeof(client_addr))) {
-                    cout << "Server Connect" << endl;
-                    send(client_sock, (my_nick + ' ' + id + ' ' + password).c_str(), (my_nick + ' ' + id + ' ' + password).length(), 0);
-
-
-                    break;
-                }
-                cout << "Connecting..." << endl;
-            }
 
         }
         else if (sign == 2) {
-            cout << "È¸¿ø°¡ÀÔ ÆäÀÌÁöÀÔ´Ï´Ù." << endl;
-
-            cout << "¾ÆÀÌµð¸¦ ÀÔ·ÂÇØÁÖ¼¼¿ä :";
+            cout << "È¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´Ï´ï¿½." << endl;
+            cout << "ï¿½ï¿½ï¿½Ìµï¿½ ï¿½Ô·ï¿½ï¿½ï¿½ï¿½Ö¼ï¿½ï¿½ï¿½ :";
             cin >> id;
-
-
-            cout << "ºñ¹Ð¹øÈ£¸¦ ÀÔ·ÂÇØÁÖ¼¼¿ä :";
+            cout << "ï¿½ï¿½Ð¹ï¿½È£ï¿½ï¿½ ï¿½Ô·ï¿½ï¿½ï¿½ï¿½Ö¼ï¿½ï¿½ï¿½ :";
             cin >> password;
-
-
-            cout << "»ç¿ëÇÒ ´Ð³×ÀÓ ÀÔ·Â >> ";
+            cout << "ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ð³ï¿½ï¿½ï¿½ ï¿½Ô·ï¿½ >> ";
             cin >> my_nick;
 
-            client_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP); // 
-
-            SOCKADDR_IN client_addr = {};
-            client_addr.sin_family = AF_INET;
-            client_addr.sin_port = htons(2304);
-            InetPton(AF_INET, TEXT("127.0.0.1"), &client_addr.sin_addr);
-
-            while (1) {
-                if (!connect(client_sock, (SOCKADDR*)&client_addr, sizeof(client_addr))) {
-                    cout << "Server Connect" << endl;
-                    send(client_sock, (my_nick + ' ' + id + ' ' + password).c_str(), (my_nick + ' ' + id + ' ' + password).length(), 0);
-                    
-
-                    break;
-                }
-                cout << "Connecting..." << endl;
-                
-                
-            }
-            main();
-            
         }
 
 
-        std::thread th2(chat_recv);
-        
+        client_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP); //
+        SOCKADDR_IN client_addr = {};
+        client_addr.sin_family = AF_INET;
+        client_addr.sin_port = htons(2304);
+        InetPton(AF_INET, TEXT("127.0.0.1"), &client_addr.sin_addr);
+        while (1) {
+            if (!connect(client_sock, (SOCKADDR*)&client_addr, sizeof(client_addr))) {
+                cout << "Server Connect" << endl;
+                send(client_sock, (my_nick + ' ' + id + ' ' + password).c_str(), (my_nick + ' ' + id + ' ' + password).length(), 0);
+                break;
+            }
+            cout << "Connecting..." << endl;
+        }
 
+
+        isServerConnected = true;
+        std::thread th2(chat_recv);
         while (1) {
             string text;
             std::getline(cin, text);
-            const char* buffer = text.c_str(); // stringÇüÀ» char* Å¸ÀÔÀ¸·Î º¯È¯
+            const char* buffer = text.c_str(); // stringï¿½ï¿½ï¿½ï¿½ char* Å¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯
             send(client_sock, buffer, strlen(buffer), 0);
         }
+        isServerConnected = false;
         th2.join();
         closesocket(client_sock);
     }
-
     WSACleanup();
     return 0;
 }
