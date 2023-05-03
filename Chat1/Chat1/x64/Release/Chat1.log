@@ -1,0 +1,31 @@
+﻿  Server1.cpp
+C:\Users\안분도\Desktop\posco\github\KDT_SMARTFACTORY_2\Chat1\Chat1\server.h(1,1): warning C4828: 파일에 0x148 오프셋에서 시작하는 문자가 포함되어 있습니다. 이 문자는 현재 원본 문자 집합에서 잘못된 문자입니다(코드 페이지 949).
+     C:\Users\안분도\Desktop\posco\github\KDT_SMARTFACTORY_2\Chat1\x64\Release\Server1.lib 라이브러리 및 C:\Users\안분도\Desktop\posco\github\KDT_SMARTFACTORY_2\Chat1\x64\Release\Server1.exp 개체를 생성하고 있습니다.
+  코드를 생성하고 있습니다.
+  48 of 364 functions (13.2%) were compiled, the rest were copied from previous compilation.
+    11 functions were new in current compilation
+    37 functions had inline decision re-evaluated but remain unchanged
+  코드를 생성했습니다.
+mysqlcppconn-static.lib(mysql_driver.obj) : warning LNK4099: '' PDB를 'mysqlcppconn-static.lib(mysql_driver.obj)' 또는 ''에서 찾을 수 없습니다. 디버그 정보가 없는 것처럼 개체를 링크합니다.
+mysqlcppconn-static.lib(mysql_connection.obj) : warning LNK4099: '' PDB를 'mysqlcppconn-static.lib(mysql_connection.obj)' 또는 ''에서 찾을 수 없습니다. 디버그 정보가 없는 것처럼 개체를 링크합니다.
+mysqlcppconn-static.lib(mysql_native_driver_wrapper.obj) : warning LNK4099: '' PDB를 'mysqlcppconn-static.lib(mysql_native_driver_wrapper.obj)' 또는 ''에서 찾을 수 없습니다. 디버그 정보가 없는 것처럼 개체를 링크합니다.
+mysqlcppconn-static.lib(mysql_uri.obj) : warning LNK4099: '' PDB를 'mysqlcppconn-static.lib(mysql_uri.obj)' 또는 ''에서 찾을 수 없습니다. 디버그 정보가 없는 것처럼 개체를 링크합니다.
+mysqlcppconn-static.lib(mysql_metadata.obj) : warning LNK4099: '' PDB를 'mysqlcppconn-static.lib(mysql_metadata.obj)' 또는 ''에서 찾을 수 없습니다. 디버그 정보가 없는 것처럼 개체를 링크합니다.
+mysqlcppconn-static.lib(mysql_warning.obj) : warning LNK4099: '' PDB를 'mysqlcppconn-static.lib(mysql_warning.obj)' 또는 ''에서 찾을 수 없습니다. 디버그 정보가 없는 것처럼 개체를 링크합니다.
+mysqlcppconn-static.lib(mysql_prepared_statement.obj) : warning LNK4099: '' PDB를 'mysqlcppconn-static.lib(mysql_prepared_statement.obj)' 또는 ''에서 찾을 수 없습니다. 디버그 정보가 없는 것처럼 개체를 링크합니다.
+mysqlcppconn-static.lib(mysql_statement.obj) : warning LNK4099: '' PDB를 'mysqlcppconn-static.lib(mysql_statement.obj)' 또는 ''에서 찾을 수 없습니다. 디버그 정보가 없는 것처럼 개체를 링크합니다.
+mysqlcppconn-static.lib(mysql_debug.obj) : warning LNK4099: '' PDB를 'mysqlcppconn-static.lib(mysql_debug.obj)' 또는 ''에서 찾을 수 없습니다. 디버그 정보가 없는 것처럼 개체를 링크합니다.
+mysqlcppconn-static.lib(mysql_client_api.obj) : warning LNK4099: '' PDB를 'mysqlcppconn-static.lib(mysql_client_api.obj)' 또는 ''에서 찾을 수 없습니다. 디버그 정보가 없는 것처럼 개체를 링크합니다.
+mysqlcppconn-static.lib(mysql_native_connection_wrapper.obj) : warning LNK4099: '' PDB를 'mysqlcppconn-static.lib(mysql_native_connection_wrapper.obj)' 또는 ''에서 찾을 수 없습니다. 디버그 정보가 없는 것처럼 개체를 링크합니다.
+mysqlcppconn-static.lib(mysql_util.obj) : warning LNK4099: '' PDB를 'mysqlcppconn-static.lib(mysql_util.obj)' 또는 ''에서 찾을 수 없습니다. 디버그 정보가 없는 것처럼 개체를 링크합니다.
+mysqlcppconn-static.lib(mysql_art_resultset.obj) : warning LNK4099: '' PDB를 'mysqlcppconn-static.lib(mysql_art_resultset.obj)' 또는 ''에서 찾을 수 없습니다. 디버그 정보가 없는 것처럼 개체를 링크합니다.
+mysqlcppconn-static.lib(mysql_resultbind.obj) : warning LNK4099: '' PDB를 'mysqlcppconn-static.lib(mysql_resultbind.obj)' 또는 ''에서 찾을 수 없습니다. 디버그 정보가 없는 것처럼 개체를 링크합니다.
+mysqlcppconn-static.lib(mysql_ps_resultset.obj) : warning LNK4099: '' PDB를 'mysqlcppconn-static.lib(mysql_ps_resultset.obj)' 또는 ''에서 찾을 수 없습니다. 디버그 정보가 없는 것처럼 개체를 링크합니다.
+mysqlcppconn-static.lib(mysql_ps_resultset_metadata.obj) : warning LNK4099: '' PDB를 'mysqlcppconn-static.lib(mysql_ps_resultset_metadata.obj)' 또는 ''에서 찾을 수 없습니다. 디버그 정보가 없는 것처럼 개체를 링크합니다.
+mysqlcppconn-static.lib(mysql_parameter_metadata.obj) : warning LNK4099: '' PDB를 'mysqlcppconn-static.lib(mysql_parameter_metadata.obj)' 또는 ''에서 찾을 수 없습니다. 디버그 정보가 없는 것처럼 개체를 링크합니다.
+mysqlcppconn-static.lib(mysql_resultset.obj) : warning LNK4099: '' PDB를 'mysqlcppconn-static.lib(mysql_resultset.obj)' 또는 ''에서 찾을 수 없습니다. 디버그 정보가 없는 것처럼 개체를 링크합니다.
+mysqlcppconn-static.lib(mysql_native_resultset_wrapper.obj) : warning LNK4099: '' PDB를 'mysqlcppconn-static.lib(mysql_native_resultset_wrapper.obj)' 또는 ''에서 찾을 수 없습니다. 디버그 정보가 없는 것처럼 개체를 링크합니다.
+mysqlcppconn-static.lib(mysql_native_statement_wrapper.obj) : warning LNK4099: '' PDB를 'mysqlcppconn-static.lib(mysql_native_statement_wrapper.obj)' 또는 ''에서 찾을 수 없습니다. 디버그 정보가 없는 것처럼 개체를 링크합니다.
+mysqlcppconn-static.lib(mysql_art_rset_metadata.obj) : warning LNK4099: '' PDB를 'mysqlcppconn-static.lib(mysql_art_rset_metadata.obj)' 또는 ''에서 찾을 수 없습니다. 디버그 정보가 없는 것처럼 개체를 링크합니다.
+mysqlcppconn-static.lib(mysql_resultset_metadata.obj) : warning LNK4099: '' PDB를 'mysqlcppconn-static.lib(mysql_resultset_metadata.obj)' 또는 ''에서 찾을 수 없습니다. 디버그 정보가 없는 것처럼 개체를 링크합니다.
+  Chat1.vcxproj -> C:\Users\안분도\Desktop\posco\github\KDT_SMARTFACTORY_2\Chat1\x64\Release\Server1.exe
