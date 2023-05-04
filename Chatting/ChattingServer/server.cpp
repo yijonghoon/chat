@@ -10,7 +10,7 @@
 
 
 #define MAX_SIZE 1024
-#define MAX_CLIENT 3 // 최대 3명
+#define MAX_CLIENT 4 // 최대 3명
 
 using std::cout;
 using std::cin;
@@ -33,6 +33,7 @@ string nickname;
 
 void server_init(); // 서버용 소켓을 만드는 함수. ~ listen()
 void add_client(); // accept 함수 실행되고 있을 예정
+void add_client_retry(SOCKET_INFO new_client, char* buf);
 void send_msg(const char* msg); // send () 실행
 void recv_msg(int idx); // recv() 실행
 void del_client(int idx); // 클라이언트와의 연결을 끊을 때
@@ -117,6 +118,7 @@ void server_init() {
 }
 
 void add_client() {
+    cout << "add_client" << endl;
     // 클라이언트와 서버와 연결에 성공하면, 새로운 소켓을 하나 생성하게 되는데, 
     // 그 주소를 담을 변수 => addr
     SOCKADDR_IN addr = {};
@@ -199,6 +201,87 @@ void add_client() {
         }
         else {
             send(new_client.sck, "Fail : 중복된 아이디가 있습니다.", MAX_SIZE, 0);
+            add_client_retry(new_client,buf);
+        }
+
+
+    }
+    
+   
+}
+void add_client_retry(SOCKET_INFO new_client, char * buf) {
+    cout << "add_client_retry" << endl;
+    recv(new_client.sck, buf, MAX_SIZE, 0); // 클라이언트 connect(), send()
+    // 클라이언트 측에서 바로 user 이름을 담아서 send를 함. recv()로 받기 위해
+    cout << "buf" << buf << endl;
+    std::stringstream userinfo(buf);
+    string id, pw;
+    userinfo >> new_client.user >> id >> pw;
+
+    cout << "user" << new_client.user << endl;
+
+    if (new_client.user == "*login*") {
+        cout << "로그인으로 들어옴!" << endl;
+        sql_login(id, pw);
+        if (is_login) {
+            cout << "is_login if문 분기 통과 완료" << endl;
+            new_client.user = nickname;
+            string msg = "[공지] " + new_client.user + " 님이 입장했습니다.";
+            cout << msg << endl; // 서버 콘솔에 공지 찍음.
+
+
+            sck_list.push_back(new_client); // sck list 에 추가함.
+            // [ {12345,"jonghoon"}, {43210,"yijonghoon"},{32134,"hoon"} ]
+
+            std::thread th(recv_msg, client_count); //client_count = 현재 클라이언트의 수(입장 전 0)
+            // 방금 생성된 client가 앞으로도 계속 메시지를 받을 수 있도록 recv
+
+
+            client_count++; // 클라이언트 수 늘려줌.
+            cout << "[공지] 현재 접속자 수 : " << client_count << "명" << endl;
+            send_msg(msg.c_str());
+            th.join(); // 얘를 만날때까지 main함수의 종료가 보류됨.
+        }
+        /*else {
+            send(new_client.sck, "아이디 혹은 패스워드가 다릅니다.", MAX_SIZE, 0);
+        }*/
+
+    }
+    // new_client.user = string(buf); // buf를 string형으로 변환해서 user에 저장
+
+    // 회원 가입 part
+    else { 
+        is_duplicate = false;
+        sql_is_id_duplicate(id);
+
+        cout << "is_duplicate" << is_duplicate << endl;
+
+
+        if (!is_duplicate) {
+            cout << "new" << endl;
+            sql_signup(id, new_client.user, pw);
+            send(new_client.sck, "Success : 회원가입에 성공했습니다.", MAX_SIZE, 0);
+            string msg = "[공지] " + new_client.user + " 님이 입장했습니다.";
+            cout << msg << endl; // 서버 콘솔에 공지 찍음.
+
+
+            sck_list.push_back(new_client); // sck list 에 추가함.
+            // [ {12345,"jonghoon"}, {43210,"yijonghoon"},{32134,"hoon"} ]
+
+            std::thread th(recv_msg, client_count); //client_count = 현재 클라이언트의 수(입장 전 0)
+            // 방금 생성된 client가 앞으로도 계속 메시지를 받을 수 있도록 recv
+
+
+            client_count++; // 클라이언트 수 늘려줌.
+            cout << "[공지] 현재 접속자 수 : " << client_count << "명" << endl;
+            send_msg(msg.c_str());
+            th.join(); // 얘를 만날때까지 main함수의 종료가 보류됨.
+
+        }
+        else {
+            cout << "duplicated" << endl;
+            send(new_client.sck, "Fail : 중복된 아이디가 있습니다.", MAX_SIZE, 0);
+            add_client_retry(new_client, buf);
         }
 
 
@@ -273,7 +356,7 @@ void sql_signup(string id, string nickname, string password) {
 
 void sql_is_id_duplicate(string new_id) {
     sql_connect();
-
+    cout << "sql_is_id_duplicate" << endl;
     stmt = con->createStatement();
 
     result = stmt->executeQuery("SELECT * FROM user WHERE id = '"+new_id +"'");

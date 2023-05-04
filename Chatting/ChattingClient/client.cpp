@@ -44,6 +44,7 @@ int result_recv() {
     while (isServerConnected) {
         cout << "result_recv active2" << endl;
         ZeroMemory(&buf, MAX_SIZE);
+        cout << "result_recv active2.5" << endl;
         if (recv(client_sock, buf, MAX_SIZE, 0) > 0) {
             cout << "result_recv active3" << endl;
             msg = buf;
@@ -121,9 +122,6 @@ int main() {
                 result_recv();
 
                 if (is_login) break;
-                else {
-                    closesocket(client_sock);
-                }
             }
     }
 
