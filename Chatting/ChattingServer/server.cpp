@@ -169,7 +169,9 @@ void add_client() {
 
     }
     // new_client.user = string(buf); // buf를 string형으로 변환해서 user에 저장
-    else {
+
+    // 회원 가입 part
+    else { 
         is_duplicate = false;
         sql_is_id_duplicate(id);
 
@@ -177,6 +179,7 @@ void add_client() {
 
         if (!is_duplicate) {
             sql_signup(id, new_client.user, pw);
+            send(new_client.sck, "Success : 회원가입에 성공했습니다.", MAX_SIZE, 0);
             string msg = "[공지] " + new_client.user + " 님이 입장했습니다.";
             cout << msg << endl; // 서버 콘솔에 공지 찍음.
 
@@ -195,7 +198,7 @@ void add_client() {
 
         }
         else {
-            send(new_client.sck, "로그인에 실패하셨습니다.", MAX_SIZE, 0);
+            send(new_client.sck, "Fail : 중복된 아이디가 있습니다.", MAX_SIZE, 0);
         }
 
 
