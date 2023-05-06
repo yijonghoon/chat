@@ -90,11 +90,19 @@ int main() {
         cin >> sign;
         if (sign == 1) {
             my_nick = "*login*";
-            cout << "로그인을 해주세요" << endl;;
-            cout << "아이디를 입력해주세요 : ";
-            cin >> id;
-            cout << "비밀번호를 입력해주세요 : ";
-            cin >> password;
+            cout << "로그인을 해주세요" << endl;
+
+            while (true) {
+                cout << "아이디를 입력해주세요 : ";
+                cin >> id;
+                cout << "비밀번호를 입력해주세요 : ";
+                cin >> password;
+
+                send(client_sock, (my_nick + ' ' + id + ' ' + password).c_str(), (my_nick + ' ' + id + ' ' + password).length(), 0);
+                result_recv();
+
+                if (is_login) break;
+            }
         }
 
 

@@ -95,7 +95,8 @@ int main() {
 
     WSACleanup();
 
-    return 0;
+    
+    0;
 }
 
 void server_init() {
@@ -149,6 +150,7 @@ void add_client() {
         sql_login(id, pw);
         if (is_login) {
             /*console*/ cout << "is_login if문 분기 통과 완료" << endl;
+            send(new_client.sck, "Success : 로그인을 성공했습니다.", MAX_SIZE, 0);
             new_client.user = nickname;
             string msg = "[공지] " + new_client.user + " 님이 입장했습니다.";
             cout << msg << endl; // 서버 콘솔에 공지 찍음.
@@ -166,9 +168,10 @@ void add_client() {
             send_msg(msg.c_str());
             th.join(); // 얘를 만날때까지 main함수의 종료가 보류됨.
         }
-        /*else {
+        else {
             send(new_client.sck, "아이디 혹은 패스워드가 다릅니다.", MAX_SIZE, 0);
-        }*/
+            add_client_retry(new_client, buf);
+        }
 
     }
     // new_client.user = string(buf); // buf를 string형으로 변환해서 user에 저장
@@ -202,7 +205,8 @@ void add_client() {
 
         }
         else {
-            send(new_client.sck, "Fail : 중복된 아이디가 있습니다.", MAX_SIZE, 0);
+            send(new_client.sck, "Fail : 아이디 혹은 패스워드가 다릅니다.", MAX_SIZE, 0);
+            cout << "Fail : 아이디 혹은 패스워드가 다릅니다." << endl;
             add_client_retry(new_client,buf);
         }
 
@@ -244,9 +248,12 @@ void add_client_retry(SOCKET_INFO new_client, char * buf) {
             send_msg(msg.c_str());
             th.join(); // 얘를 만날때까지 main함수의 종료가 보류됨.
         }
-        /*else {
-            send(new_client.sck, "아이디 혹은 패스워드가 다릅니다.", MAX_SIZE, 0);
-        }*/
+        else {
+            send(new_client.sck, "Fail : 아이디 혹은 패스워드가 다릅니다.", MAX_SIZE, 0);
+            cout << "Fail : 아이디 혹은 패스워드가 다릅니다." << endl;
+            add_client_retry(new_client, buf);
+
+        }
 
     }
     // new_client.user = string(buf); // buf를 string형으로 변환해서 user에 저장
@@ -317,8 +324,7 @@ void recv_msg(int idx) {
                 sss >> receiver;
                 getline(sss, message);
             }
-            dlwhd9635 all message
-            dlwhd9635 chris message
+
 
             else {
                 receiver = "";
