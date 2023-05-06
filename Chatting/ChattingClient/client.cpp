@@ -123,9 +123,6 @@ int main() {
 
                 // send(client_sock, (my_nick + ' ' + id + ' ' + password).c_str(), (my_nick + ' ' + id + ' ' + password).length(), 0);
 
-
-
-
                 send(client_sock, (my_nick + ' ' + id + ' ' + password).c_str(), (my_nick + ' ' + id + ' ' + password).length(), 0);
                 result_recv();
 
@@ -136,9 +133,33 @@ int main() {
 
         std::thread th2(chat_recv);
         while (1) {
-            string text;
+            string text, temp, receiver;
+            const char* buffer;
             std::getline(cin, text);
-            const char* buffer = (id+' '+text).c_str();
+            std::stringstream text_inspect(text);
+            
+            int word_count = 0;
+            bool is_whisper = false;
+            while (text_inspect >> temp) {
+                if (temp == "to:" or temp == "TO:" or temp == "to" or temp == "TO") {
+                    is_whisper = true;
+                    text_inspect >> receiver;
+                    text = "";
+                    std::getline(text_inspect, text);
+                }
+                else {
+                    break;
+                    
+                }
+            }
+            if (is_whisper) {
+                buffer = (id + " Y " + receiver +" " +text).c_str();
+            }
+            else {
+                buffer = (id + " N " + "*" + " " + text).c_str();
+            }
+
+            
             send(client_sock, buffer, strlen(buffer), 0);
         }
         isServerConnected = false;

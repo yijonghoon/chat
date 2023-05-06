@@ -136,101 +136,26 @@ void add_client() {
 
     new_client.sck = accept(server_sock.sck, (sockaddr*)&addr, &addrsize);
     // connect()
-    recv(new_client.sck, buf, MAX_SIZE, 0); // 클라이언트 connect(), send()
-    // 클라이언트 측에서 바로 user 이름을 담아서 send를 함. recv()로 받기 위해
-    /*console*/ cout << "buf" << buf << endl;
-    std::stringstream userinfo(buf);
-    string id, pw;
-    userinfo >> new_client.user >> id >> pw;
-
-    /*console*/ cout << "user" << new_client.user << endl;
-
-    if (new_client.user == "*login*") {
-        cout << "로그인으로 들어옴!" << endl;
-        sql_login(id, pw);
-        if (is_login) {
-            /*console*/ cout << "is_login if문 분기 통과 완료" << endl;
-            send(new_client.sck, "Success : 로그인을 성공했습니다.", MAX_SIZE, 0);
-            new_client.user = nickname;
-            string msg = "[공지] " + new_client.user + " 님이 입장했습니다.";
-            cout << msg << endl; // 서버 콘솔에 공지 찍음.
-
-
-            sck_list.push_back(new_client); // sck list 에 추가함.
-            // [ {12345,"jonghoon"}, {43210,"yijonghoon"},{32134,"hoon"} ]
-
-            std::thread th(recv_msg, client_count); //client_count = 현재 클라이언트의 수(입장 전 0)
-            // 방금 생성된 client가 앞으로도 계속 메시지를 받을 수 있도록 recv
-
-
-            client_count++; // 클라이언트 수 늘려줌.
-            cout << "[공지] 현재 접속자 수 : " << client_count << "명" << endl;
-            send_msg(msg.c_str());
-            th.join(); // 얘를 만날때까지 main함수의 종료가 보류됨.
-        }
-        else {
-            send(new_client.sck, "아이디 혹은 패스워드가 다릅니다.", MAX_SIZE, 0);
-            add_client_retry(new_client, buf);
-        }
-
-    }
-    // new_client.user = string(buf); // buf를 string형으로 변환해서 user에 저장
-
-    // 회원 가입 part
-    else { 
-        is_duplicate = false;
-        sql_is_id_duplicate(id);
-
-
-        /*console*/ cout << "aaaa" << is_duplicate;
-        if (!is_duplicate) {
-            /*console*/ cout << id << " " << new_client.user << " " << pw << endl;
-            sql_signup(id, new_client.user, pw);
-            send(new_client.sck, "Success : 회원가입에 성공했습니다.", MAX_SIZE, 0);
-            string msg = "[공지] " + new_client.user + " 님이 입장했습니다.";
-            cout << msg << endl; // 서버 콘솔에 공지 찍음.
-
-
-            sck_list.push_back(new_client); // sck list 에 추가함.
-            // [ {12345,"jonghoon"}, {43210,"yijonghoon"},{32134,"hoon"} ]
-
-            std::thread th(recv_msg, client_count); //client_count = 현재 클라이언트의 수(입장 전 0)
-            // 방금 생성된 client가 앞으로도 계속 메시지를 받을 수 있도록 recv
-
-
-            client_count++; // 클라이언트 수 늘려줌.
-            cout << "[공지] 현재 접속자 수 : " << client_count << "명" << endl;
-            send_msg(msg.c_str());
-            th.join(); // 얘를 만날때까지 main함수의 종료가 보류됨.
-
-        }
-        else {
-            send(new_client.sck, "Fail : 아이디 혹은 패스워드가 다릅니다.", MAX_SIZE, 0);
-            cout << "Fail : 아이디 혹은 패스워드가 다릅니다." << endl;
-            add_client_retry(new_client,buf);
-        }
-
-
-    }
     
-   
+    add_client_retry(new_client,buf); 
 }
 void add_client_retry(SOCKET_INFO new_client, char * buf) {
-    /*console*/ cout << "add_client_retry" << endl;
+    //console cout << "add_client_retry" << endl;
     recv(new_client.sck, buf, MAX_SIZE, 0); // 클라이언트 connect(), send()
     // 클라이언트 측에서 바로 user 이름을 담아서 send를 함. recv()로 받기 위해
-    /*console*/ cout << "buf" << buf << endl;
+    //console cout << "buf" << buf << endl;
     std::stringstream userinfo(buf);
     string id, pw;
     userinfo >> new_client.user >> id >> pw;
 
-    /*console*/ cout << "user" << new_client.user << endl;
+    //console cout << "user" << new_client.user << endl;
 
     if (new_client.user == "*login*") {
-        /*console*/ cout << "로그인으로 들어옴!" << endl;
+        //console cout << "로그인으로 들어옴!" << endl;
         sql_login(id, pw);
         if (is_login) {
-            /*console*/ cout << "is_login if문 분기 통과 완료" << endl;
+            send(new_client.sck, "Success : 로그인을 성공했습니다.", MAX_SIZE, 0);
+            //console cout << "is_login if문 분기 통과 완료" << endl;
             new_client.user = nickname;
             string msg = "[공지] " + new_client.user + " 님이 입장했습니다.";
             cout << msg << endl; // 서버 콘솔에 공지 찍음.
@@ -263,11 +188,11 @@ void add_client_retry(SOCKET_INFO new_client, char * buf) {
         is_duplicate = false;
         sql_is_id_duplicate(id);
 
-        /*console*/ cout << "is_duplicate" << is_duplicate << endl;
+        //console cout << "is_duplicate" << is_duplicate << endl;
 
 
         if (!is_duplicate) {
-            /*console*/ cout << "new" << endl;
+            //console cout << "new" << endl;
             sql_signup(id, new_client.user, pw);
             send(new_client.sck, "Success : 회원가입에 성공했습니다.", MAX_SIZE, 0);
             string msg = "[공지] " + new_client.user + " 님이 입장했습니다.";
@@ -317,23 +242,11 @@ void recv_msg(int idx) {
         ZeroMemory(&buf, MAX_SIZE); // buf 0으로 초기화
         if (recv(sck_list[idx].sck, buf, MAX_SIZE, 0) > 0) {
             std::stringstream sss(buf);
-            string this_id, receiver, message, temp;
+            string this_id, is_result, receiver, message;
             sss >> this_id;
-            sss >> message;
-            if (message == "to:" or message == "TO:" or message == "to" or message == "TO") {
-                sss >> receiver;
-                getline(sss, message);
-            }
-
-
-            else {
-                receiver = "";
-                std::stringstream ssss(buf);
-                ssss >> this_id;
-                getline(ssss, message);
-               
-            }
-            
+            sss >> is_result;
+            sss >> receiver;
+            std::getline(sss, message);
             
             cout << this_id << " " << receiver << " " << message << " " << endl;
          
@@ -360,23 +273,23 @@ void del_client(int idx) {
 
 
 void sql_signup(string id, string nickname, string password) {
-    /*console*/ cout << "00";
+    //console cout << "00";
     
     sql_connect();
-    /*console*/ cout << "aa";
+    //console cout << "aa";
 
     // 데이터베이스 선택
     con->setSchema("project_chat");
 
-    /*console*/ cout << "bb";
+    //console cout << "bb";
 
     // db 한글 저장을 위한 셋팅 
     stmt = con->createStatement();
     stmt->execute("set names euckr");
-    /*console*/ cout << "cc";
+    //console cout << "cc";
     if (stmt) { delete stmt; stmt = nullptr; }
 
-    /*console*/ cout << "signup in";
+    //console cout << "signup in";
     pstmt = con->prepareStatement("INSERT INTO user(id, nickname, password) VALUES(?,?,?)"); // INSERT
 
     pstmt->setString(1, id);
@@ -384,27 +297,27 @@ void sql_signup(string id, string nickname, string password) {
     pstmt->setString(3, password);
  
     pstmt->execute(); // 쿼리 실행
-    /*console*/ cout << "signup success";
+    //console cout << "signup success";
     sql_disconnect();
 
 }
 
 void sql_is_id_duplicate(string new_id) {
     sql_connect();
-    /*console*/ cout << "sql_is_id_duplicate" << endl;
+    //console cout << "sql_is_id_duplicate" << endl;
     stmt = con->createStatement();
-    /*console*/ cout << "sql_is_id_duplicate finish1" << endl;
+    //console cout << "sql_is_id_duplicate finish1" << endl;
     result = stmt->executeQuery("SELECT * FROM user WHERE id = '"+new_id +"'");
     delete stmt;
-    /*console*/ cout << "sql_is_id_duplicate finish2" << endl;
+    //console cout << "sql_is_id_duplicate finish2" << endl;
     while (result->next()) {
         cout << "중복검사에 걸림" << endl;
         is_duplicate = true;
     }
-    /*console*/ cout << "sql_is_id_duplicate finish3" << endl;
+    //console cout << "sql_is_id_duplicate finish3" << endl;
     sql_disconnect();
 
-    /*console*/ cout << "sql_is_id_duplicate finish4" << endl;
+    //console cout << "sql_is_id_duplicate finish4" << endl;
 }
 
 void sql_connect() {
@@ -476,15 +389,15 @@ void sql_message_input(string sender, string receiver, string message) {
     //cout << sender << receiver << message << endl;
     con->setSchema("project_chat");
 
-    /*console*/ cout << "bb";
+    //console cout << "bb";
 
     // db 한글 저장을 위한 셋팅 
     stmt = con->createStatement();
     stmt->execute("set names euckr");
-    /*console*/ cout << "cc";
+    //console cout << "cc";
     if (stmt) { delete stmt; stmt = nullptr; }
 
-    /*console*/ cout << "signup in";
+    //console cout << "signup in";
     pstmt = con->prepareStatement("INSERT INTO message(sender, receiver, message) VALUES(?,?,?);"); // INSERT
 
     pstmt->setString(1, sender);
@@ -492,7 +405,7 @@ void sql_message_input(string sender, string receiver, string message) {
     pstmt->setString(3, message);
 
     pstmt->execute(); // 쿼리 실행
-    /*console*/ cout << "signup success";
+    //console cout << "signup success";
     sql_disconnect();
 }
 
