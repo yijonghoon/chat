@@ -29,17 +29,19 @@ struct SOCKET_INFO {
 std::vector<SOCKET_INFO> sck_list; // 서버에 연결된 client 저장할 변수
 SOCKET_INFO server_sock; // 서버 소켓의 정보를 저장할 변수
 int client_count = 0;  //현재 접속하고 있는 클라이언트의 수 카운트.
+std::vector<int> empty_socket;
 string nickname;
 
 void server_init(); // 서버용 소켓을 만드는 함수. ~ listen()
+void socket_list_init();
 void add_client(); // accept 함수 실행되고 있을 예정
-void add_client_authentication(SOCKET_INFO new_client, char* buf);
+void add_client_authentication(SOCKET_INFO new_client);
 void send_msg(const char* msg); // send () 실행
-void print_chat_history(string user_id, SOCKET_INFO new_client);
+void send_history(string user_id, SOCKET_INFO new_client);
 void recv_msg(int idx); // recv() 실행
 void del_client(int idx); // 클라이언트와의 연결을 끊을 때
 void sql_signup(string id, string nickname, string password);
-void sql_is_id_duplicate(string new_id);
+void sql_check_if_id_exists(string new_id);
 void sql_connect();
 void sql_disconnect();
 void sql_login(string id, string pw);
@@ -118,6 +120,10 @@ void server_init() {
 
     cout << "서버 On" << endl;
 }
+void socket_list_init() {
+    for (int i = 0; i < MAX_CLIENT; i++)
+        empty_socket.push_back(i);
+}
 
 void add_client() {
     cout << "add_client" << endl;
@@ -125,38 +131,47 @@ void add_client() {
     // 그 주소를 담을 변수 => addr
     SOCKADDR_IN addr = {};
     int addrsize = sizeof(addr);
-    char buf[MAX_SIZE] = { }; // 메시지 최대 길이 설정
+     // 메시지 최대 길이 설정
 
     ZeroMemory(&addr, addrsize); //  addr 메모리를 0x00으로 초기화/addrsize = sizeof(addr), 
 
     SOCKET_INFO new_client = {};
     // sck, user : 클라이언트의 소켓 정보를 저장
-
+    
 
 
     new_client.sck = accept(server_sock.sck, (sockaddr*)&addr, &addrsize);
     // connect()
     
-    add_client_authentication(new_client,buf); 
+    add_client_authentication(new_client); 
 }
 
-void add_client_authentication(SOCKET_INFO new_client, char * buf) {
+void add_client_authentication(SOCKET_INFO new_client) {
+    char buf[MAX_SIZE] = { };
     //console cout << "add_client_authentication" << endl;
-    recv(new_client.sck, buf, MAX_SIZE, 0); // 클라이언트 connect(), send()
+    //recv(new_client.sck, buf, MAX_SIZE, 0); // 클라이언트 connect(), send()
     // 클라이언트 측에서 바로 user 이름을 담아서 send를 함. recv()로 받기 위해
     //console cout << "buf" << buf << endl;
+    if (recv(new_client.sck, buf, MAX_SIZE, 0) <= 0) {
+        closesocket(new_client.sck);
+         std::thread th(add_client);
+        th.join();
+        // th1[i] = std::thread(add_client);
+        return;
+    } 
+
     std::stringstream userinfo(buf);
     string id, pw;
     userinfo >> new_client.user >> id >> pw;
 
     //console cout << "user" << new_client.user << endl;
-
+   
     if (new_client.user == "*login*") {
         //console cout << "로그인으로 들어옴!" << endl;
         sql_login(id, pw);
         if (is_login) {
             send(new_client.sck, "Success : 로그인을 성공했습니다.", MAX_SIZE, 0);
-            print_chat_history(id, new_client);
+            send_history(id, new_client);
             //console cout << "is_login if문 분기 통과 완료" << endl;
             new_client.user = nickname;
             string msg = "[공지] " + new_client.user + " 님이 입장했습니다.";
@@ -178,7 +193,7 @@ void add_client_authentication(SOCKET_INFO new_client, char * buf) {
         else {
             send(new_client.sck, "Fail : 아이디 혹은 패스워드가 다릅니다.", MAX_SIZE, 0);
             cout << "Fail : 아이디 혹은 패스워드가 다릅니다." << endl;
-            add_client_authentication(new_client, buf);
+            add_client_authentication(new_client);
 
         }
 
@@ -188,7 +203,7 @@ void add_client_authentication(SOCKET_INFO new_client, char * buf) {
     // 회원 가입 part
     else { 
         is_duplicate = false;
-        sql_is_id_duplicate(id);
+        sql_check_if_id_exists(id);
 
         //console cout << "is_duplicate" << is_duplicate << endl;
 
@@ -200,7 +215,8 @@ void add_client_authentication(SOCKET_INFO new_client, char * buf) {
             string msg = "[공지] " + new_client.user + " 님이 입장했습니다.";
             cout << msg << endl; // 서버 콘솔에 공지 찍음.
 
-
+            index.pop_back
+            sck_list[] = new_client
             sck_list.push_back(new_client); // sck list 에 추가함.
             // [ {12345,"jonghoon"}, {43210,"yijonghoon"},{32134,"hoon"} ]
 
@@ -217,7 +233,7 @@ void add_client_authentication(SOCKET_INFO new_client, char * buf) {
         else {
             cout << "duplicated" << endl;
             send(new_client.sck, "Fail : 중복된 아이디가 있습니다.", MAX_SIZE, 0);
-            add_client_authentication(new_client, buf);
+            add_client_authentication(new_client);
         }
 
 
@@ -232,9 +248,7 @@ void send_msg(const char* msg) {
     }
     
 }
-void send_msg(SOCKET sck,string msg) {
-   // send(sck_list[i].sck, msg, MAX_SIZE, 0);
-}
+
 
 void recv_msg(int idx) {
     char buf[MAX_SIZE] = { };
@@ -263,13 +277,14 @@ void recv_msg(int idx) {
             cout << msg << endl;
             send_msg(msg.c_str());
             del_client(idx);
+
             return;
         }
     }
 }
 
 
-void print_chat_history(string user_id, SOCKET_INFO new_client) {
+void send_history(string user_id, SOCKET_INFO new_client) {
     try {
         driver = sql::mysql::get_mysql_driver_instance();
         con = driver->connect(server, username, dbpassword);
@@ -300,6 +315,7 @@ void print_chat_history(string user_id, SOCKET_INFO new_client) {
 void del_client(int idx) {
     closesocket(sck_list[idx].sck);
     client_count--;
+
 }
 
 
@@ -333,22 +349,22 @@ void sql_signup(string id, string nickname, string password) {
 
 }
 
-void sql_is_id_duplicate(string new_id) {
+void sql_check_if_id_exists(string new_id) {
     sql_connect();
-    //console cout << "sql_is_id_duplicate" << endl;
+    //console cout << "sql_check_if_id_exists" << endl;
     stmt = con->createStatement();
-    //console cout << "sql_is_id_duplicate finish1" << endl;
+    //console cout << "sql_check_if_id_exists finish1" << endl;
     result = stmt->executeQuery("SELECT * FROM user WHERE id = '"+new_id +"'");
     delete stmt;
-    //console cout << "sql_is_id_duplicate finish2" << endl;
+    //console cout << "sql_check_if_id_exists finish2" << endl;
     while (result->next()) {
         cout << "중복검사에 걸림" << endl;
         is_duplicate = true;
     }
-    //console cout << "sql_is_id_duplicate finish3" << endl;
+    //console cout << "sql_check_if_id_exists finish3" << endl;
     sql_disconnect();
 
-    //console cout << "sql_is_id_duplicate finish4" << endl;
+    //console cout << "sql_check_if_id_exists finish4" << endl;
 }
 
 void sql_connect() {
