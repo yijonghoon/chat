@@ -153,7 +153,7 @@ int main() {
                 }
             }
             if (is_whisper) {
-                buffer = (id + " Y " + receiver +" " +text).c_str();
+                buffer = (id + " Y " + receiver + text).c_str();
             }
             else {
                 buffer = (id + " N " + "*" + " " + text).c_str();

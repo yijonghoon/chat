@@ -33,13 +33,13 @@ string nickname;
 
 void server_init(); // 서버용 소켓을 만드는 함수. ~ listen()
 void add_client(); // accept 함수 실행되고 있을 예정
-void add_client_retry(SOCKET_INFO new_client, char* buf);
+void add_client_authentication(SOCKET_INFO new_client, char* buf);
 void send_msg(const char* msg); // send () 실행
+void print_chat_history(string user_id, SOCKET_INFO new_client);
 void recv_msg(int idx); // recv() 실행
 void del_client(int idx); // 클라이언트와의 연결을 끊을 때
 void sql_signup(string id, string nickname, string password);
 void sql_is_id_duplicate(string new_id);
-void check_id_duplicate(string new_id);
 void sql_connect();
 void sql_disconnect();
 void sql_login(string id, string pw);
@@ -137,10 +137,11 @@ void add_client() {
     new_client.sck = accept(server_sock.sck, (sockaddr*)&addr, &addrsize);
     // connect()
     
-    add_client_retry(new_client,buf); 
+    add_client_authentication(new_client,buf); 
 }
-void add_client_retry(SOCKET_INFO new_client, char * buf) {
-    //console cout << "add_client_retry" << endl;
+
+void add_client_authentication(SOCKET_INFO new_client, char * buf) {
+    //console cout << "add_client_authentication" << endl;
     recv(new_client.sck, buf, MAX_SIZE, 0); // 클라이언트 connect(), send()
     // 클라이언트 측에서 바로 user 이름을 담아서 send를 함. recv()로 받기 위해
     //console cout << "buf" << buf << endl;
@@ -155,6 +156,7 @@ void add_client_retry(SOCKET_INFO new_client, char * buf) {
         sql_login(id, pw);
         if (is_login) {
             send(new_client.sck, "Success : 로그인을 성공했습니다.", MAX_SIZE, 0);
+            print_chat_history(id, new_client);
             //console cout << "is_login if문 분기 통과 완료" << endl;
             new_client.user = nickname;
             string msg = "[공지] " + new_client.user + " 님이 입장했습니다.";
@@ -176,7 +178,7 @@ void add_client_retry(SOCKET_INFO new_client, char * buf) {
         else {
             send(new_client.sck, "Fail : 아이디 혹은 패스워드가 다릅니다.", MAX_SIZE, 0);
             cout << "Fail : 아이디 혹은 패스워드가 다릅니다." << endl;
-            add_client_retry(new_client, buf);
+            add_client_authentication(new_client, buf);
 
         }
 
@@ -215,7 +217,7 @@ void add_client_retry(SOCKET_INFO new_client, char * buf) {
         else {
             cout << "duplicated" << endl;
             send(new_client.sck, "Fail : 중복된 아이디가 있습니다.", MAX_SIZE, 0);
-            add_client_retry(new_client, buf);
+            add_client_authentication(new_client, buf);
         }
 
 
@@ -242,13 +244,14 @@ void recv_msg(int idx) {
         ZeroMemory(&buf, MAX_SIZE); // buf 0으로 초기화
         if (recv(sck_list[idx].sck, buf, MAX_SIZE, 0) > 0) {
             std::stringstream sss(buf);
-            string this_id, is_result, receiver, message;
+            string this_id, is_whisper, receiver, message;
             sss >> this_id;
-            sss >> is_result;
+            sss >> is_whisper;
             sss >> receiver;
-            std::getline(sss, message);
             
-            cout << this_id << " " << receiver << " " << message << " " << endl;
+            std::getline(sss, message);
+            message.erase(message.begin());
+            //console cout << this_id << " " << receiver << " " << message << " " << endl;
          
             msg = sck_list[idx].user + " : " + message;
             cout << msg << endl;
@@ -265,6 +268,34 @@ void recv_msg(int idx) {
     }
 }
 
+
+void print_chat_history(string user_id, SOCKET_INFO new_client) {
+    try {
+        driver = sql::mysql::get_mysql_driver_instance();
+        con = driver->connect(server, username, dbpassword);
+        con->setSchema("project_chat");
+        stmt = con->createStatement();
+        stmt->execute("set names euckr");
+        sql::PreparedStatement* pstmt = con->prepareStatement("SELECT * FROM message WHERE (sender = ? OR receiver = ?) OR (receiver = '*')");
+        pstmt->setString(1, user_id);
+        pstmt->setString(2, user_id);
+    
+        sql::ResultSet* res = pstmt->executeQuery();
+        while (res->next()) {
+            
+            string message = res->getString("message");
+            string time = res->getString("time");
+            string sender = res->getString("sender");
+            cout << "[" << time << "] " << sender << ": " << message << endl;
+        }
+        delete res;
+        delete pstmt;
+    }
+    catch (sql::SQLException& e) {
+        cout << "SQL Exception: " << e.what() << endl;
+    }
+    if (stmt) { delete stmt; stmt = nullptr; }
+}
 
 void del_client(int idx) {
     closesocket(sck_list[idx].sck);
@@ -368,7 +399,7 @@ void sql_login(string id, string pw) {
     while (result->next()) {
         cout << "로그인 성공!" << endl;
         pstmt = con->prepareStatement("SELECT nickname FROM user WHERE id = ? AND password = ?");
-        pstmt->setString(1, id);
+        pstmt->setString(1,id);
         pstmt->setString(2, pw);
         result = pstmt->executeQuery();
         while (result->next()) {
