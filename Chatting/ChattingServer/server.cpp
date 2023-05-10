@@ -24,16 +24,14 @@ bool is_login;
 struct SOCKET_INFO {
     SOCKET sck; // ctrl + 클릭 하면 헤더 속 SOCKET 코드를 찾아갈 수 있다, socket은 unsigned int pointer를 갖고 있구나 하고 예측할 수 있다.
     string user; // user : 사람의 이름
+    string id;
 };
-
 std::vector<SOCKET_INFO> sck_list; // 서버에 연결된 client 저장할 변수
 SOCKET_INFO server_sock; // 서버 소켓의 정보를 저장할 변수
 int client_count = 0;  //현재 접속하고 있는 클라이언트의 수 카운트.
-std::vector<int> empty_socket;
 string nickname;
 
 void server_init(); // 서버용 소켓을 만드는 함수. ~ listen()
-void socket_list_init();
 void add_client(); // accept 함수 실행되고 있을 예정
 void add_client_authentication(SOCKET_INFO new_client);
 void send_msg(const char* msg); // send () 실행
@@ -47,12 +45,29 @@ void sql_disconnect();
 void sql_login(string id, string pw);
 void sql_message_input(string sender, string receiver, string msg);
 
+void reset_client(int idx) {
+    closesocket(sck_list[idx].sck);
+    
+
+    sck_list.erase(sck_list.begin() + idx);
+
+    SOCKADDR_IN addr = {  };
+    int addrsize = sizeof(addr);
+    ZeroMemory(&addr, addrsize);
+
+    SOCKET_INFO new_client = {};
+    new_client.sck = accept(server_sock.sck, (sockaddr*)&addr, &addrsize);
+    add_client_authentication(new_client);
+}
+
+
 // MySQL Connector/C++ 초기화
 sql::mysql::MySQL_Driver* driver; // 추후 해제하지 않아도 Connector/C++가 자동으로 해제해 줌
 sql::Connection* con;
 sql::Statement* stmt;
 sql::PreparedStatement* pstmt;
 sql::ResultSet* result;
+std::thread th1[MAX_CLIENT];
 
 int main() {
     WSADATA wsa;
@@ -65,11 +80,10 @@ int main() {
     // code가 0이 되면 if문을 실행하겠다.
     if (!code) {
         server_init(); // 서버측 소켓 활성화
-
-        std::thread th1[MAX_CLIENT]; 
         // 크기가 MAX_CLIENT인 배열 생성. 배열에 담길 자료형은 std::thread
         // thread = 대기, thread가 끝났다고 하기 전까지 main 함수가 종료되지 않도록 해줌. 메소드 .join
         for (int i = 0; i < MAX_CLIENT; i++) {
+            //th1[i] = std::thread(add_client);
             th1[i] = std::thread(add_client); 
             // 클라이언트 받을 수 있는 상태를 만들어 줌, accept
             // 클라이언트 별로 각자 다른 일을 할 수 있게끔 다중스레드를 만들어 줌
@@ -78,9 +92,32 @@ int main() {
 
         while (1) {
             string text, msg = "";
-
+            string is_command, command;
             std::getline(cin, text);
             const char* buf = text.c_str();
+            std::stringstream serverstream(buf);
+            
+            serverstream >> is_command;
+            if (is_command == "admin") {
+                serverstream >> command;
+                if (command == "ban") {
+                    string ban_who;
+                    serverstream >> ban_who;
+                    for (int i = 0; i < MAX_CLIENT;i++) {
+                        if (sck_list[i].id == ban_who) {
+                            send(sck_list[i].sck, "너 밴", MAX_SIZE, 0);
+                            
+                            del_client(i);
+                      
+
+                        }
+                    }
+                }
+                else if(command == "increase") {}
+                else if (command == "decrease") {}
+            }
+
+
             msg = server_sock.user + " : " + buf;
             send_msg(msg.c_str());
         }
@@ -120,10 +157,7 @@ void server_init() {
 
     cout << "서버 On" << endl;
 }
-void socket_list_init() {
-    for (int i = 0; i < MAX_CLIENT; i++)
-        empty_socket.push_back(i);
-}
+
 
 void add_client() {
     cout << "add_client" << endl;
@@ -160,10 +194,11 @@ void add_client_authentication(SOCKET_INFO new_client) {
         return;
     } 
 
+
     std::stringstream userinfo(buf);
     string id, pw;
     userinfo >> new_client.user >> id >> pw;
-
+    new_client.id = id;
     //console cout << "user" << new_client.user << endl;
    
     if (new_client.user == "*login*") {
@@ -174,6 +209,22 @@ void add_client_authentication(SOCKET_INFO new_client) {
             send_history(id, new_client);
             //console cout << "is_login if문 분기 통과 완료" << endl;
             new_client.user = nickname;
+
+            /*
+            bool reentry = false;
+            int index = 0;
+            for (int i = 0; i < sck_list.size(); i++) {
+                if (sck_list[i].id == new_client.id) {
+                    reentry = true;
+                    index = i;
+                    break;
+                }
+            }
+
+            if
+                */
+
+
             string msg = "[공지] " + new_client.user + " 님이 입장했습니다.";
             cout << msg << endl; // 서버 콘솔에 공지 찍음.
 
@@ -215,8 +266,7 @@ void add_client_authentication(SOCKET_INFO new_client) {
             string msg = "[공지] " + new_client.user + " 님이 입장했습니다.";
             cout << msg << endl; // 서버 콘솔에 공지 찍음.
 
-            index.pop_back
-            sck_list[] = new_client
+            
             sck_list.push_back(new_client); // sck list 에 추가함.
             // [ {12345,"jonghoon"}, {43210,"yijonghoon"},{32134,"hoon"} ]
 
@@ -278,6 +328,7 @@ void recv_msg(int idx) {
             send_msg(msg.c_str());
             del_client(idx);
 
+
             return;
         }
     }
@@ -313,9 +364,14 @@ void send_history(string user_id, SOCKET_INFO new_client) {
 }
 
 void del_client(int idx) {
-    closesocket(sck_list[idx].sck);
+    /*closesocket(sck_list[idx].sck);
+    sck_list.erase(sck_list.begin() + idx);
     client_count--;
-
+    */
+    reset_client(idx);
+    // 소켓 리셋 후 클라이언트 다시 추가
+      
+    
 }
 
 
