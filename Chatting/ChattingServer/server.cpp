@@ -215,8 +215,7 @@ void add_client_authentication(SOCKET_INFO new_client) {
             string msg = "[공지] " + new_client.user + " 님이 입장했습니다.";
             cout << msg << endl; // 서버 콘솔에 공지 찍음.
 
-            index.pop_back
-            sck_list[] = new_client
+         
             sck_list.push_back(new_client); // sck list 에 추가함.
             // [ {12345,"jonghoon"}, {43210,"yijonghoon"},{32134,"hoon"} ]
 
